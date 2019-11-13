@@ -1,0 +1,129 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.1'
+      jupytext_version: 1.2.4
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+```{python}
+# %matplotlib notebook
+```
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+from helpers import clamp_database, create_graph, draw, draw_line, add_loss, animated_draw
+```
+
+# 🚿 Cleaning up our data
+
+To start out, we're going to pull together our dataset like we did in the last lesson. Just like before, you can change the following variables to determine which columns from our data to use and how to handle outliers.
+
+```{python}
+x_var_label = 'grade'
+y_var_label = 'sm_time'
+x_domain = (5,12)
+y_domain = (0,50)
+```
+
+```{python}
+df = pd.read_csv('social_media_use_clean.csv')
+df_two_col = df[[x_var_label, y_var_label]]  # creating new dataframe with only 2 columns
+df_two_col = df_two_col.dropna() # removing rows with no response (NaN)
+df_two_col_clamp = clamp_database(df_two_col, (5,12), (0,50))  # clamping the dataframe so it fits within the domains
+data_points_list = [(x,y) for x, y in df_two_col.values]  # copying data from dataframe to list
+```
+
+# 🔎 Minimizing loss
+
+Last time, we wrote a loss function to help us determine how good our line was at summarizing a potential trend in our data.
+
+```{python}
+def loss(m,b,data_points_list):
+    sqerror = 0
+    for point in data_points_list:
+        line_y = m*point[0] + b
+        residual = point[1] - line_y
+        sqerror += pow(residual,2)
+    return sqerror/len(data_points_list)
+```
+
+You played around with a few different lines to try to find the that had the smallest loss.
+
+
+```{python}
+ax = create_graph(x_var_label, y_var_label)
+draw(data_points_list, ax, jitter=True)
+m = 0
+b = 1
+draw_line(m, b, ax)
+line_loss = loss(m, b, data_points_list)
+add_loss(line_loss, ax)
+```
+
+But, you could try out different `m` and `b` values for the next 10 years and you still might not find the best ones. 
+
+We need a way to more efficient try out values to try to minimize our loss.
+
+💻 **TODO:** Your goal for this lab is to design ans write a function to help you find a good line with the lowest possible loss.
+
+The `animated_draw()` function will animate different choices of `m` and `b`. Call it whenever you have a line you'd like to draw a new line on your plot. The cell below shows an example of how to use it. `animate_draw()` takes the following arguments:
+
+- `m`: the slope of a line
+- `b`: the y-intercept of a line
+- `line_loss`: the loss of a line computed using the `loss()` function
+- `ax`: the plot Axes we've been using to plot our data and lines
+- *optionally `delay`: the number of miliseconds the animate function should wait after plotting the line*
+
+
+### ❗️ ISSUE: 
+matplotlib interactive will not display plots in the correct aspect ratio for high-dpi displays until a loop is finished running. Issue documented on github here: https://github.com/matplotlib/matplotlib/issues/9606
+
+
+#### 1st work around: 
+don't worry about the resizing
+
+```{python}
+ax = create_graph(x_var_label, y_var_label)
+draw(data_points_list, ax, jitter=True)
+
+mb_pairs = [(0.2,1.1), (0.3, 1.2), (0.4, 1.3), (0.5, 1.4), (.6, 1.5)]
+for i in range(len(mb_pairs)):
+    m = mb_pairs[i][0]
+    b = mb_pairs[i][1]
+    line_loss = loss(m, b, data_points_list)
+    animated_draw(m, b, line_loss, ax)
+```
+
+#### 2nd work around
+
+separate the creation of the plot from the dynamic updates. Plot size stays the same throughout but students will have to scroll up to see the plot (thus missing some/all of the animation) and my not know where to see the plot.
+
+```{python}
+ax = create_graph(x_var_label, y_var_label)
+draw(data_points_list, ax, jitter=True)
+```
+
+```{python}
+mb_pairs = [(0.2,1.1), (0.3, 1.2), (0.4, 1.3), (0.5, 1.4), (.6, 1.5)]
+for i in range(len(mb_pairs)):
+    m = mb_pairs[i][0]
+    b = mb_pairs[i][1]
+    line_loss = loss(m, b, data_points_list)
+    animated_draw(m, b, line_loss, ax)
+```
+
+# 👩‍💻 Your solution 👨‍💻
+
+Write your code to find the optimal `m` and `b` in the cell below:
+
+```{python}
+
+```
