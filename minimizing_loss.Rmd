@@ -104,7 +104,7 @@ for i in range(len(mb_pairs)):
 
 #### 2nd work around
 
-separate the creation of the plot from the dynamic updates. Plot size stays the same throughout but students will have to scroll up to see the plot (thus missing some/all of the animation) and my not know where to see the plot.
+separate the creation of the plot from the dynamic updates. Plot size stays the same throughout but students will have to scroll up to see the plot (thus missing some/all of the animation) and my not know where to see the plot. Also, it seems you have to run the second cell twice the first time it is run to see the animation.
 
 ```{python}
 ax = create_graph(x_var_label, y_var_label)
