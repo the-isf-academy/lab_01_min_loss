@@ -65,7 +65,7 @@ m = 0
 b = 1
 draw_line(m, b, ax)
 line_loss = loss(m, b, data_points_list)
-# add_loss(line_loss, ax)
+add_loss(line_loss, ax)
 ```
 
 But, you could try out different `m` and `b` values for the next 10 years and you still might not find the best ones. 
