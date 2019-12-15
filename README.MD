@@ -1,4 +1,4 @@
-# Lab: Summarizing data with a scaled_increment
+# Lab: Minimizing loss
 
 In this lab, students will come up with strategies for finding a good line to summarize two-dimensional data using a loss function developed in a previous lab
 
