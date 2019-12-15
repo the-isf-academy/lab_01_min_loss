@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # helpers.py
-# by Jacob Wolf, Chris Proctor, Jenny Han, and Krate Ng
+# by Jacob Wolf, Chris Proctor, Jenny Han, and Krates Ng
 # Functions which support summarizing data with a line lab
 
 # =============================================================================
@@ -81,23 +81,25 @@ def draw(data_points_list, ax, jitter = False):
     [[10, 30], [45, 55], [-20, 10]]. Optionally addes jitter to the list to make the magnitude
     of ordinal or categorical values more obvious in the plot.
     input: list, matplotlib Axes, optional boolean
-    output: none
+    output: matplotlib Axes
     """
     x, y = zip(*data_points_list)
     if jitter:
         x = jitter_list(x, 0.1)
         y = jitter_list(y, 0.1)
     ax.scatter(x, y, alpha=0.5)
+    return ax
 
 def draw_line(slope, y_intercept, ax):
     """
     Draws a line with the given slope and y-intercept.
     If you have already drawn a scatter plot, will draw the line over that graph.
     input: int or float, int or float, matplotlib Axes
-    output: none
+    output: matplotlib Axes
     """
-    xmin, xmax = plt.xlim()
+    xmin, xmax = ax.get_xlim()
     ax.plot([xmin, xmax], [y_intercept + slope * xmin, y_intercept + slope * xmax])
+    return ax
 
 
 def add_loss(loss, ax):
@@ -105,9 +107,10 @@ def add_loss(loss, ax):
     Adds text to a matplotlib Axes ax to display the loss of a regression line. Text is
     position just outside the plot bounds in the top right corner.
     input: int or float, matplotlib Axes
-    output: none
+    output: matplotlib Axes
     """
     ax.text(1,1,'loss: {}'.format(loss), bbox=dict(facecolor='red', alpha=0.9), horizontalalignment='right', verticalalignment='top', transform=ax.transAxes)
+    return ax
 
 
 def animated_draw(slope, y_intercept, loss, ax, delay = .5):
@@ -116,7 +119,7 @@ def animated_draw(slope, y_intercept, loss, ax, delay = .5):
     element to hold the loss text. In the following steps, updates the line and the loss text for the current
     iteration. Adds a delay after drawing in anticipation of being called again by a student's for loop.
     input: int or float, matplotlib Axes
-    output: none
+    output: matplotlib Axes
     """
     if ax.lines:
         xmin, xmax = plt.xlim()
@@ -132,3 +135,4 @@ def animated_draw(slope, y_intercept, loss, ax, delay = .5):
     add_loss(loss, ax)
     ax.figure.canvas.draw()
     plt.pause(delay)
+    return ax
