@@ -21,6 +21,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+import random
 
 
 def clamp_point(x, domain):
@@ -136,3 +137,23 @@ def animated_draw(slope, y_intercept, loss, ax, delay = .5):
     ax.figure.canvas.draw()
     plt.pause(delay)
     return ax
+
+
+def min_loss(data_points_list, loss, step_ratio=0.1, max_m=1, max_b=2):
+    """
+    Approximates the minimum possible loss for a dataset by optimizing the m and b values of a line
+    using a random Monte Carlo approach.
+    input: list of (float/int, float/int) tuples, loss function
+    output: (float, float) tuple for the min_m and min_b
+    """
+    min_loss = loss(0,0, data_points_list)
+    min_m = 0
+    min_b = 0
+    for m in range(0,int(max_m/step_ratio)):
+        for b in range(0,int(max_b/step_ratio)):
+            curr_loss = loss(m*step_ratio, b*step_ratio, data_points_list)
+            if curr_loss < min_loss:
+                min_loss = curr_loss
+                min_m = m*step_ratio
+                min_b = b*step_ratio
+    return (min_m, min_b)
