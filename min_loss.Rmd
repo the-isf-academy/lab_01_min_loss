@@ -43,32 +43,41 @@ df_two_col_clamp = clamp_database(df_two_col, x_domain, y_domain)  # clamping th
 data_points_list = [(x,y) for x, y in df_two_col.values]  # copying data from dataframe to list
 ```
 
+```{python}
+df
+```
+
 # 🔎 Minimizing loss
 
 Last time, we wrote a loss function to help us determine how good our line was at summarizing a potential trend in our data.
 
 ```{python}
-def loss_one_point(point, m, b):
-    point_x, point_y = point
-    line_y = m*point_x + b
-    residual = point_y - line_y
-    return pow(residual,2)
+def line_y_value(x, m, b):
+    return m*x+b
+
+def y_distance(point, m, b):
+    x, y = point
+    line_y = line_y_value(x, m, b)
+    return abs(line_y - y)
 
 def loss(m,b,data_points_list):
-    sqerror = 0
+    sq_dist_list = []
     for point in data_points_list:
-        sqerror += loss_one_point(point, m, b)
-    return sqerror/len(data_points_list)
+        distance = y_distance(point, m, b)
+        sq_distance = pow(distance, 2)
+        sq_dist_list.append(sq_distance)
+
+    mean_sq_error = sum(sq_dist_list) / len(sq_dist_list)
+    return mean_sq_error
 ```
 
 You played around with a few different lines to try to find the that had the smallest loss.
 
-
 ```{python}
 ax = create_graph(x_var_label, y_var_label)
 draw(data_points_list, ax, jitter=True)
-m = 0
-b = 1
+m = .6
+b = .3
 draw_line(m, b, ax)
 line_loss = loss(m, b, data_points_list)
 add_loss(line_loss, ax)
@@ -92,8 +101,8 @@ print("min_b: {}".format(min_b))
 ```{python}
 ax = create_graph(x_var_label, y_var_label)
 draw(data_points_list, ax, jitter=True)
-m = #PUT MIN HERE
-b = #PUT MIN HERE
+m = ???
+b = ???
 draw_line(m, b, ax)
 line_loss = loss(m, b, data_points_list)
 add_loss(line_loss, ax)
@@ -116,6 +125,125 @@ for m in range(0,int(1/step_ratio)):
         color_value = (r,g,0.0)
         ax.plot([xmin, xmax], [b*step_ratio + m*step_ratio * xmin, b*step_ratio + m*step_ratio * xmax], alpha=.7, color = color_value)
 ```
+
+## Note: Why square mean square error?
+
+We decided on 3 major characteristics of a loss function:
+1. should find the distances between the points and the trend line
+2. should square the distances to more heavily weight points farther from the line
+3. should average all the squared distances so it works for any number of data points
+
+**Why should we square the distances?** Let's look at an example to see why.
+
+First, let's define another loss function which doesn't use mean square error, just mean error:
+
+```{python}
+def loss_no_square(m,b,data_points_list):
+    dist_list = []
+    for point in data_points_list:
+        distance = y_distance(point, m, b)
+        dist_list.append(distance)
+
+    mean_error = sum(dist_list) / len(dist_list)
+    return mean_error
+```
+
+Now, let's make a toy dataset with x and y variables that seem to have a strong correlation:
+
+```{python}
+test_data_1 = [(2,2.3), (2.5, 2.7), (3,2.9), (3.5, 3.2), (4,4.1), (4.5,4.6), (5,4.8), (5.5,5.4)]
+ax = create_graph("x", "y")
+draw(test_data_1, ax)
+```
+
+Let's find the line that minimizes loss for this dataset. 
+
+On the left, we'll use the original loss function which uses mean square error.
+
+On the right, we'll do the same thing but with the loss function with uses mean error **(rather than mean *square* error):**
+
+```{python}
+fig, axes = plt.subplots(ncols=2, sharey=True)
+
+min_m_squared, min_b_squared = min_loss(test_data_1, loss, step_ratio=.01)
+ax0 = axes[0]
+ax0.set_title("Mean Squared Error")
+ax0.set_xlabel("x")
+ax0.set_ylabel("y")
+draw(test_data_1, ax0)
+draw_line(min_m_squared, min_b_squared, ax0)
+line_loss = loss(min_m_squared, min_b_squared, test_data_1)
+add_loss(line_loss, ax0)
+
+print("min m w/ mean squared error: {}".format(min_m_squared))
+print("min b w/ mean squared error: {}".format(min_b_squared))
+print()
+
+min_m_no_square, min_b_no_square = min_loss(test_data_1, loss_no_square, step_ratio=.01)
+ax1 = axes[1]
+ax1.set_title("Mean Error")
+ax1.set_xlabel("x")
+ax1.set_ylabel("y")
+draw(test_data_1, ax1)
+draw_line(min_m_no_square, min_b_no_square, ax1)
+line_loss = loss(min_m_no_square, min_b_no_square, test_data_1)
+add_loss(line_loss, ax1)
+
+print("min m w/ mean error:         {}".format(min_m_no_square))
+print("min b w/ mean error:         {}".format(min_b_no_square))
+```
+
+Pretty similar, huh?
+
+But what if our correlation is not as strong? Let's modify our toy dataset so the trend isn't as clear:
+
+```{python}
+test_data_2 = [(2,2.3), (2.5, 2.7), (3,2.9), (3.5, 3.2), (4,4.1), (4.5,4.6), (5,4.6), (5.5,3)]
+ax = create_graph("x", "y")
+draw(test_data_2, ax)
+```
+
+Let's do the same thing with this dataset that we did before.
+
+Left: minimized loss using mean *square* error
+
+Right: minimized loss using mean error
+
+```{python}
+fig, axes = plt.subplots(ncols=2, sharey=True)
+
+min_m_squared, min_b_squared = min_loss(test_data_2, loss, step_ratio=.01)
+ax0 = axes[0]
+ax0.set_title("Mean Squared Error")
+ax0.set_xlabel("x")
+ax0.set_ylabel("y")
+draw(test_data_2, ax0)
+draw_line(min_m_squared, min_b_squared, ax0)
+line_loss = loss(min_m_squared, min_b_squared, test_data_2)
+add_loss(line_loss, ax0)
+
+print("min m w/ mean squared error: {}".format(min_m_squared))
+print("min b w/ mean squared error: {}".format(min_b_squared))
+print()
+
+min_m_no_square, min_b_no_square = min_loss(test_data_2, loss_no_square, step_ratio=.01)
+ax1 = axes[1]
+ax1.set_title("Mean Error")
+ax1.set_xlabel("x")
+ax1.set_ylabel("y")
+draw(test_data_2, ax1)
+draw_line(min_m_no_square, min_b_no_square, ax1)
+line_loss = loss(min_m_no_square, min_b_no_square, test_data_2)
+add_loss(line_loss, ax1)
+
+print("min m w/ mean error:         {}".format(min_m_no_square))
+print("min b w/ mean error:         {}".format(min_b_no_square))
+```
+
+Theoretically, the loss function which uses mean *squared* error more heavily weights points further from the line while the loss function which uses mean error treats all distances the same.
+
+We can see how this affects our trend line: while the line on the right (mean error) goes through more points, the line on the left (mean *square* square error) would probably make more accurate predictions overall because **it strikes a balances between the points with big x/big y values [like (4.5, 4.6) ]and the points with big x/small y values (5.5,3)**.
+
 
 # 👩‍💻 Finding trends in our data 👨‍💻
 
